@@ -1,0 +1,21 @@
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-pad {
+  padding: 14px 16px;
+}
+
+.card-clickable {
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.card-clickable:active {
+  transform: scale(.985);
+  box-shadow: none;
+}
