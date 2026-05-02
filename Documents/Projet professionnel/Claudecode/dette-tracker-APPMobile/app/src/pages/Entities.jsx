@@ -1,20 +1,22 @@
-import { useState } from 'react'
-import Card from '../components/Card'
+import { useState, useMemo } from 'react'
 import Modal from '../components/Modal'
 import { toast } from '../components/Toast'
+import { computeBalances, netBalance } from '../logic/balances'
 import './Entities.css'
 
-function eur(n) {
+function eurFull(n) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
 }
 function initials(name) {
   return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
-export default function Entities({ entities, addEntity, updateEntity, deleteEntity }) {
+export default function Entities({ entities, operations, addEntity, updateEntity, deleteEntity }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing,   setEditing]   = useState(null)
   const [form,      setForm]      = useState({ name: '', category: 'bank', note: '', real_balance: '' })
+
+  const bal = useMemo(() => computeBalances(operations, entities), [operations, entities])
 
   function openAdd() {
     setEditing(null)
@@ -67,7 +69,7 @@ export default function Entities({ entities, addEntity, updateEntity, deleteEnti
 
   const banks   = entities.filter(e => e.category === 'bank')
   const persons = entities.filter(e => e.category === 'person')
-  const others  = entities.filter(e => e.category === 'other')
+  const others  = entities.filter(e => e.category !== 'bank' && e.category !== 'person')
 
   return (
     <div className="page-content">
@@ -89,9 +91,9 @@ export default function Entities({ entities, addEntity, updateEntity, deleteEnti
         </div>
       ) : (
         <>
-          {banks.length > 0   && <EntitySection title="Comptes"  items={banks}   onEdit={openEdit} onDelete={handleDelete} />}
-          {persons.length > 0 && <EntitySection title="Proches"  items={persons} onEdit={openEdit} onDelete={handleDelete} />}
-          {others.length > 0  && <EntitySection title="Autres"   items={others}  onEdit={openEdit} onDelete={handleDelete} />}
+          {banks.length > 0   && <EntitySection title="Comptes" items={banks}   bal={bal} onEdit={openEdit} onDelete={handleDelete} />}
+          {persons.length > 0 && <EntitySection title="Proches" items={persons} bal={bal} onEdit={openEdit} onDelete={handleDelete} />}
+          {others.length > 0  && <EntitySection title="Autres"  items={others}  bal={bal} onEdit={openEdit} onDelete={handleDelete} />}
         </>
       )}
 
@@ -100,7 +102,7 @@ export default function Entities({ entities, addEntity, updateEntity, deleteEnti
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Modifier l\'entité' : 'Nouvelle entité'}
+        title={editing ? "Modifier l'entité" : 'Nouvelle entité'}
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>Annuler</button>
@@ -162,31 +164,60 @@ export default function Entities({ entities, addEntity, updateEntity, deleteEnti
   )
 }
 
-function EntitySection({ title, items, onEdit, onDelete }) {
+function EntitySection({ title, items, bal, onEdit, onDelete }) {
   return (
     <div className="section">
       <div className="section-title">{title}</div>
-      <div className="entity-grid">
+      <div className="ent-grid-2">
         {items.map(e => (
-          <Card key={e.id}>
-            <div className="ent-item">
-              <div className={`avatar ${e.category}`}>{initials(e.name)}</div>
-              <div className="ent-item-info">
-                <div className="ent-item-name">{e.name}</div>
-                {e.note && <div className="ent-item-note">{e.note}</div>}
-                {e.real_balance !== null && e.real_balance !== undefined && (
-                  <div className={`ent-item-bal ${e.category === 'bank' ? 'c-blue' : 'c-purple'}`}>
-                    {eur(e.real_balance)}
-                  </div>
-                )}
-              </div>
-              <div className="ent-item-actions">
-                <button className="ent-action-btn" onClick={() => onEdit(e)}>✎</button>
-                <button className="ent-action-btn danger" onClick={() => onDelete(e.id)}>✕</button>
-              </div>
-            </div>
-          </Card>
+          <EntityCard key={e.id} entity={e} bal={bal[e.id] || { iOwe: 0, theyOwe: 0 }} onEdit={onEdit} onDelete={onDelete} />
         ))}
+      </div>
+    </div>
+  )
+}
+
+function EntityCard({ entity, bal, onEdit, onDelete }) {
+  const net      = netBalance(entity, { [entity.id]: bal })
+  const nc       = net > 0 ? 'c-green' : net < 0 ? 'c-red' : 'c-muted'
+  const realBal  = entity.real_balance
+  const hasReal  = realBal !== null && realBal !== undefined
+  const realColor = entity.category === 'bank' ? 'c-blue' : entity.category === 'person' ? 'c-purple' : ''
+
+  return (
+    <div className="ent-card-mgmt">
+      {/* Header */}
+      <div className="ent-card-header">
+        <div className={`avatar avatar-sm ${entity.category}`}>{initials(entity.name)}</div>
+        <span className="ent-card-name-txt">{entity.name}</span>
+      </div>
+
+      {/* 4 valeurs */}
+      <div className="ent-card-vals">
+        <div className="ent-val-row">
+          <span className="ent-val-lbl">Solde réel</span>
+          <span className={hasReal ? realColor + ' fw-600' : 'c-muted'}>
+            {hasReal ? eurFull(realBal) : '—'}
+          </span>
+        </div>
+        <div className="ent-val-row">
+          <span className="ent-val-lbl">Dette</span>
+          <span className={bal.iOwe > 0.005 ? 'c-red fw-600' : 'c-muted'}>{eurFull(bal.iOwe)}</span>
+        </div>
+        <div className="ent-val-row">
+          <span className="ent-val-lbl">Créance</span>
+          <span className={bal.theyOwe > 0.005 ? 'c-green fw-600' : 'c-muted'}>{eurFull(bal.theyOwe)}</span>
+        </div>
+        <div className="ent-val-row ent-val-net">
+          <span className="ent-val-lbl">Solde net</span>
+          <span className={nc + ' fw-700'}>{net >= 0 ? '+' : '−'}{eurFull(Math.abs(net))}</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="ent-card-actions">
+        <button className="ent-act-btn" onClick={() => onEdit(entity)}>Modifier</button>
+        <button className="ent-act-btn danger" onClick={() => onDelete(entity.id)}>Supprimer</button>
       </div>
     </div>
   )
