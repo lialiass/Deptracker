@@ -5,30 +5,24 @@ import { toast } from '../components/Toast'
 import './Settings.css'
 
 export default function Settings({ session, onSignOut }) {
-  const navigate          = useNavigate()
-  const [deleting, setDeleting] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const navigate = useNavigate()
+  const [deleting,     setDeleting]     = useState(false)
+  const [confirmOpen,  setConfirmOpen]  = useState(false)
 
   const email     = session?.user?.email || '—'
   const createdAt = session?.user?.created_at
     ? new Date(session.user.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
-  const userId    = session?.user?.id
-
-  async function handleSignOut() {
-    await onSignOut()
-  }
+  const userId = session?.user?.id
 
   async function handleDeleteAccount() {
     if (!userId) return
     setDeleting(true)
     try {
-      // Suppression dans l'ordre (clés étrangères)
       await supabase.from('future_incomes').delete().eq('user_id', userId)
       await supabase.from('operations').delete().eq('user_id', userId)
       await supabase.from('entities').delete().eq('user_id', userId)
       await supabase.from('profiles').delete().eq('id', userId)
-      // Déconnexion — le compte auth reste mais toutes les données sont effacées
       await onSignOut()
     } catch (err) {
       toast(err.message, 'error')
@@ -38,7 +32,7 @@ export default function Settings({ session, onSignOut }) {
 
   return (
     <div className="settings-page">
-      {/* Header */}
+
       <div className="settings-header">
         <button className="settings-back" onClick={() => navigate(-1)}>‹</button>
         <h1 className="settings-title">Paramètres</h1>
@@ -46,7 +40,7 @@ export default function Settings({ session, onSignOut }) {
 
       <div className="settings-body">
 
-        {/* Section Compte */}
+        {/* Compte */}
         <div className="settings-section">
           <div className="settings-section-label">Compte</div>
           <div className="settings-card">
@@ -63,29 +57,21 @@ export default function Settings({ session, onSignOut }) {
           </div>
         </div>
 
-        {/* Section Actions */}
+        {/* Session */}
         <div className="settings-section">
           <div className="settings-section-label">Session</div>
           <div className="settings-card">
-            <button className="settings-action-btn" onClick={handleSignOut}>
-              <span className="settings-action-icon">↪</span>
+            <button className="settings-btn" onClick={() => onSignOut()}>
               Se déconnecter
             </button>
           </div>
         </div>
 
-        {/* Zone danger */}
+        {/* Zone dangereuse */}
         <div className="settings-section">
           <div className="settings-section-label">Zone dangereuse</div>
-          <div className="settings-card settings-card-danger">
-            <p className="settings-danger-text">
-              Supprime définitivement toutes tes données (entités, opérations, revenus). Cette action est irréversible.
-            </p>
-            <button
-              className="settings-action-btn danger"
-              onClick={() => setConfirmOpen(true)}
-            >
-              <span className="settings-action-icon">✕</span>
+          <div className="settings-card">
+            <button className="settings-btn settings-btn-danger" onClick={() => setConfirmOpen(true)}>
               Supprimer mon compte
             </button>
           </div>
@@ -93,15 +79,15 @@ export default function Settings({ session, onSignOut }) {
 
       </div>
 
-      {/* Modal confirmation suppression */}
+      {/* Confirmation suppression */}
       {confirmOpen && (
         <div className="confirm-overlay" onClick={() => !deleting && setConfirmOpen(false)}>
           <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
             <div className="confirm-icon">⚠</div>
             <h2 className="confirm-title">Supprimer le compte ?</h2>
             <p className="confirm-text">
-              Toutes tes données seront supprimées définitivement : entités, opérations, revenus.
-              <strong> Cette action est irréversible.</strong>
+              Toutes tes données seront supprimées définitivement.<br />
+              <strong>Cette action est irréversible.</strong>
             </p>
             <div className="confirm-actions">
               <button
