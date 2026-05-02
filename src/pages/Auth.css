@@ -73,3 +73,55 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* ── Mot de passe oublié ─────────────────────────────────── */
+.auth-forgot-link {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font);
+  font-size: .8125rem;
+  color: var(--text3);
+  cursor: pointer;
+  text-align: right;
+  align-self: flex-end;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .15s;
+}
+.auth-forgot-link:active { color: var(--blue); }
+
+.auth-forgot-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-forgot-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.auth-success {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  font-size: .875rem;
+  color: var(--accent);
+  line-height: 1.55;
+}
+
+.auth-back-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font);
+  font-size: .875rem;
+  color: var(--blue);
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-back-link:active { opacity: .6; }

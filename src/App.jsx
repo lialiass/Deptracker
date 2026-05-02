@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useToast, ToastContainer } from './components/Toast'
@@ -13,7 +14,7 @@ import Settings      from './pages/Settings'
 import './styles/globals.css'
 
 export default function App() {
-  const { session, signIn, signUp, signOut } = useAuth()
+  const { session, signIn, signUp, signOut, resetPassword } = useAuth()
   const { toasts } = useToast()
 
   // Chargement initial de la session
@@ -28,7 +29,7 @@ export default function App() {
   if (!session) {
     return (
       <>
-        <Auth signIn={signIn} signUp={signUp} />
+        <Auth signIn={signIn} signUp={signUp} resetPassword={resetPassword} />
         <ToastContainer toasts={toasts} />
       </>
     )
@@ -42,7 +43,15 @@ export default function App() {
 }
 
 function AppShell({ session, onSignOut, toasts }) {
-  const data = useData(session.user.id)
+  const data     = useData(session.user.id)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!data.loading && data.entities.length === 0 && location.pathname === '/') {
+      navigate('/entities', { replace: true })
+    }
+  }, [data.loading, data.entities.length, location.pathname])
 
   if (data.loading) {
     return (
