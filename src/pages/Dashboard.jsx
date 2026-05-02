@@ -4,15 +4,9 @@ import { computeBalances, netBalance } from '../logic/balances'
 import './Dashboard.css'
 
 function eur(n) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0)
 }
 
-function eurC(n) {
-  const v = n || 0, abs = Math.abs(v), pfx = v < 0 ? '−' : ''
-  if (abs >= 10000) return pfx + Math.round(abs / 1000) + 'k€'
-  if (abs >= 1000)  return pfx + (abs / 1000).toFixed(1).replace('.0', '') + 'k€'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
-}
 
 function initials(name) {
   return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -52,7 +46,7 @@ export default function Dashboard({ entities, operations }) {
       {banks.length > 0 && (
         <div className="section">
           <div className="section-title">Comptes</div>
-          <div className="entity-grid">
+          <div className="dashboard-entity-grid">
             {banks.map(e => (
               <EntityCard key={e.id} entity={e} bal={bal[e.id] || { iOwe: 0, theyOwe: 0 }} />
             ))}
@@ -63,7 +57,7 @@ export default function Dashboard({ entities, operations }) {
       {persons.length > 0 && (
         <div className="section">
           <div className="section-title">Proches</div>
-          <div className="entity-grid">
+          <div className="dashboard-entity-grid">
             {persons.map(e => (
               <EntityCard key={e.id} entity={e} bal={bal[e.id] || { iOwe: 0, theyOwe: 0 }} />
             ))}
@@ -104,20 +98,20 @@ function EntityCard({ entity, bal }) {
         <div className="ent-val-row">
           <span className="ent-val-lbl">Réel</span>
           <span className={hasReal ? realColor + ' fw-600' : 'c-muted'}>
-            {hasReal ? eurC(realBal) : '—'}
+            {hasReal ? eur(realBal) : '—'}
           </span>
         </div>
         <div className="ent-val-row">
           <span className="ent-val-lbl">Dette</span>
-          <span className={bal.iOwe > 0.005 ? 'c-red fw-600' : 'c-muted'}>{eurC(bal.iOwe)}</span>
+          <span className={bal.iOwe > 0.005 ? 'c-red fw-600' : 'c-muted'}>{eur(bal.iOwe)}</span>
         </div>
         <div className="ent-val-row">
           <span className="ent-val-lbl">Créance</span>
-          <span className={bal.theyOwe > 0.005 ? 'c-green fw-600' : 'c-muted'}>{eurC(bal.theyOwe)}</span>
+          <span className={bal.theyOwe > 0.005 ? 'c-green fw-600' : 'c-muted'}>{eur(bal.theyOwe)}</span>
         </div>
         <div className="ent-val-row ent-val-net">
           <span className="ent-val-lbl">Net</span>
-          <span className={nc + ' fw-700'}>{net >= 0 ? '+' : '−'}{eurC(Math.abs(net))}</span>
+          <span className={nc + ' fw-700'}>{net >= 0 ? '+' : '−'}{eur(Math.abs(net))}</span>
         </div>
       </div>
     </div>

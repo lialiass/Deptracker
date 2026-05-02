@@ -47,11 +47,11 @@
 }
 .metric-sign { font-size: .8em; margin-right: 1px; }
 
-/* ── Grille adaptive : 2 cols standard, 3 cols sur +430px ── */
-.entity-grid {
+/* ── Grille 2 colonnes fixes ─────────────────────────────── */
+.dashboard-entity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 /* ── Mini-carte entité ───────────────────────────────────── */
