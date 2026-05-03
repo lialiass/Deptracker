@@ -2,13 +2,20 @@ import { useState } from 'react'
 import './Auth.css'
 
 export default function Auth({ signIn, signUp, resetPassword }) {
-  const [mode,        setMode]       = useState('login')  // 'login' | 'signup' | 'forgot'
-  const [email,       setEmail]      = useState('')
-  const [password,    setPassword]   = useState('')
-  const [error,       setError]      = useState('')
-  const [loading,     setLoading]    = useState(false)
-  const [sent,        setSent]       = useState(false)
-  const [signupSent,  setSignupSent] = useState(false)
+  const [mode,     setMode]     = useState('login')  // 'login' | 'signup' | 'forgot'
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [sent,     setSent]     = useState(false)
+
+  // [EMAIL CONFIRM OFF] signupSent désactivé — Supabase ouvre la session directement après signUp.
+  // Pour réactiver la confirmation email :
+  //   1. Activer "Confirm email" dans Supabase Dashboard → Auth → Settings
+  //   2. Décommenter le bloc ci-dessous dans handleSubmit :
+  //      if (!err) { setSignupSent(true); return }
+  //   3. Remettre le state : const [signupSent, setSignupSent] = useState(false)
+  //   4. Remettre le bloc JSX {signupSent ? <div className="auth-signup-confirm">...</div> : <form>}
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -21,11 +28,8 @@ export default function Auth({ signIn, signUp, resetPassword }) {
     } else {
       const err = await signUp(email, password)
       setLoading(false)
-      if (err) {
-        setError(err.message)
-      } else {
-        setSignupSent(true)
-      }
+      // Sans confirmation email : la session s'ouvre automatiquement via onAuthStateChange.
+      if (err) setError(err.message)
     }
   }
 
@@ -51,7 +55,6 @@ export default function Auth({ signIn, signUp, resetPassword }) {
   function switchMode(next) {
     setMode(next)
     setError('')
-    setSignupSent(false)
   }
 
   return (
@@ -113,60 +116,49 @@ export default function Auth({ signIn, signUp, resetPassword }) {
               >Inscription</button>
             </div>
 
-            {signupSent ? (
-              <div className="auth-signup-confirm">
-                <div className="auth-success">
-                  Un email de confirmation vient d'être envoyé. Vérifiez votre boîte mail.
-                </div>
-                <button type="button" className="auth-back-link" onClick={() => switchMode('login')}>
-                  ← Retour à la connexion
-                </button>
+            <form className="auth-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  placeholder="votre@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
               </div>
-            ) : (
-              <form className="auth-form" onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
+
+              <div className="form-group">
+                <div className="form-label-row">
+                  <label className="form-label">Mot de passe</label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      className="auth-forgot-link"
+                      onClick={() => { setMode('forgot'); setError('') }}
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  )}
                 </div>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  minLength={6}
+                />
+              </div>
 
-                <div className="form-group">
-                  <div className="form-label-row">
-                    <label className="form-label">Mot de passe</label>
-                    {mode === 'login' && (
-                      <button
-                        type="button"
-                        className="auth-forgot-link"
-                        onClick={() => { setMode('forgot'); setError('') }}
-                      >
-                        Mot de passe oublié ?
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                    minLength={6}
-                  />
-                </div>
+              {error && <div className="form-error">{error}</div>}
 
-                {error && <div className="form-error">{error}</div>}
-
-                <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                  {loading ? '...' : mode === 'login' ? 'Se connecter' : 'Créer un compte'}
-                </button>
-              </form>
-            )}
+              <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                {loading ? '...' : mode === 'login' ? 'Se connecter' : 'Créer un compte'}
+              </button>
+            </form>
           </>
 
         )}
