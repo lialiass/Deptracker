@@ -1,33 +1,44 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import './ResetPassword.css'
 
-export default function ResetPassword({ onSignOut }) {
+export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirm,  setConfirm]  = useState('')
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
   const [done,     setDone]     = useState(false)
 
+  const navigate = useNavigate()
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+
     if (password.length < 6) {
       setError('Le mot de passe doit contenir au moins 6 caractères.')
       return
     }
+
     if (password !== confirm) {
       setError('Les mots de passe ne correspondent pas.')
       return
     }
+
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
+
     if (error) {
       setError(error.message)
     } else {
       setDone(true)
-      setTimeout(() => onSignOut(), 2500)
+
+      setTimeout(async () => {
+        await supabase.auth.signOut()
+        navigate('/auth')
+      }, 1000)
     }
   }
 
@@ -61,6 +72,7 @@ export default function ResetPassword({ onSignOut }) {
                   autoFocus
                 />
               </div>
+
               <div className="form-group">
                 <label className="form-label">Confirmer le mot de passe</label>
                 <input
@@ -73,7 +85,9 @@ export default function ResetPassword({ onSignOut }) {
                   minLength={6}
                 />
               </div>
+
               {error && <div className="form-error">{error}</div>}
+
               <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                 {loading ? '...' : 'Modifier mon mot de passe'}
               </button>
