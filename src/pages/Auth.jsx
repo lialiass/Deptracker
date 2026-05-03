@@ -2,21 +2,31 @@ import { useState } from 'react'
 import './Auth.css'
 
 export default function Auth({ signIn, signUp, resetPassword }) {
-  const [mode,     setMode]     = useState('login')  // 'login' | 'signup' | 'forgot'
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
-  const [sent,     setSent]     = useState(false)
+  const [mode,        setMode]       = useState('login')  // 'login' | 'signup' | 'forgot'
+  const [email,       setEmail]      = useState('')
+  const [password,    setPassword]   = useState('')
+  const [error,       setError]      = useState('')
+  const [loading,     setLoading]    = useState(false)
+  const [sent,        setSent]       = useState(false)
+  const [signupSent,  setSignupSent] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const fn  = mode === 'login' ? signIn : signUp
-    const err = await fn(email, password)
-    setLoading(false)
-    if (err) setError(err.message)
+    if (mode === 'login') {
+      const err = await signIn(email, password)
+      setLoading(false)
+      if (err) setError(err.message)
+    } else {
+      const err = await signUp(email, password)
+      setLoading(false)
+      if (err) {
+        setError(err.message)
+      } else {
+        setSignupSent(true)
+      }
+    }
   }
 
   async function handleForgot(e) {
@@ -36,6 +46,12 @@ export default function Auth({ signIn, signUp, resetPassword }) {
     setMode('login')
     setSent(false)
     setError('')
+  }
+
+  function switchMode(next) {
+    setMode(next)
+    setError('')
+    setSignupSent(false)
   }
 
   return (
@@ -89,56 +105,68 @@ export default function Auth({ signIn, signUp, resetPassword }) {
             <div className="auth-tabs">
               <button
                 className={'auth-tab' + (mode === 'login' ? ' active' : '')}
-                onClick={() => { setMode('login'); setError('') }}
+                onClick={() => switchMode('login')}
               >Connexion</button>
               <button
                 className={'auth-tab' + (mode === 'signup' ? ' active' : '')}
-                onClick={() => { setMode('signup'); setError('') }}
+                onClick={() => switchMode('signup')}
               >Inscription</button>
             </div>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Mot de passe</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  minLength={6}
-                />
-              </div>
-
-              {mode === 'login' && (
-                <button
-                  type="button"
-                  className="auth-forgot-link"
-                  onClick={() => { setMode('forgot'); setError('') }}
-                >
-                  Mot de passe oublié ?
+            {signupSent ? (
+              <div className="auth-signup-confirm">
+                <div className="auth-success">
+                  Un email de confirmation vient d'être envoyé. Vérifiez votre boîte mail.
+                </div>
+                <button type="button" className="auth-back-link" onClick={() => switchMode('login')}>
+                  ← Retour à la connexion
                 </button>
-              )}
+              </div>
+            ) : (
+              <form className="auth-form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    placeholder="votre@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
 
-              {error && <div className="form-error">{error}</div>}
+                <div className="form-group">
+                  <div className="form-label-row">
+                    <label className="form-label">Mot de passe</label>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        className="auth-forgot-link"
+                        onClick={() => { setMode('forgot'); setError('') }}
+                      >
+                        Mot de passe oublié ?
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    minLength={6}
+                  />
+                </div>
 
-              <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                {loading ? '...' : mode === 'login' ? 'Se connecter' : 'Créer un compte'}
-              </button>
-            </form>
+                {error && <div className="form-error">{error}</div>}
+
+                <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                  {loading ? '...' : mode === 'login' ? 'Se connecter' : 'Créer un compte'}
+                </button>
+              </form>
+            )}
           </>
 
         )}

@@ -4,11 +4,12 @@ import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useToast, ToastContainer } from './components/Toast'
 import BottomNav from './components/BottomNav'
-import Auth         from './pages/Auth'
-import Dashboard    from './pages/Dashboard'
-import AddOperation from './pages/AddOperation'
-import Entities     from './pages/Entities'
-import History      from './pages/History'
+import Auth          from './pages/Auth'
+import ResetPassword from './pages/ResetPassword'
+import Dashboard     from './pages/Dashboard'
+import AddOperation  from './pages/AddOperation'
+import Entities      from './pages/Entities'
+import History       from './pages/History'
 import FutureIncomes from './pages/FutureIncomes'
 import Settings      from './pages/Settings'
 import './styles/globals.css'
@@ -17,12 +18,37 @@ export default function App() {
   const { session, signIn, signUp, signOut, resetPassword } = useAuth()
   const { toasts } = useToast()
 
-  // Chargement initial de la session
   if (session === undefined) {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: 'var(--text2)', fontSize: '.875rem' }}>Chargement...</div>
       </div>
+    )
+  }
+
+  return (
+    <BrowserRouter>
+      <InnerApp
+        session={session}
+        signIn={signIn}
+        signUp={signUp}
+        signOut={signOut}
+        resetPassword={resetPassword}
+        toasts={toasts}
+      />
+    </BrowserRouter>
+  )
+}
+
+function InnerApp({ session, signIn, signUp, signOut, resetPassword, toasts }) {
+  const { pathname } = useLocation()
+
+  if (pathname === '/reset-password') {
+    return (
+      <>
+        <ToastContainer toasts={toasts} />
+        <ResetPassword onSignOut={signOut} />
+      </>
     )
   }
 
@@ -35,11 +61,7 @@ export default function App() {
     )
   }
 
-  return (
-    <BrowserRouter>
-      <AppShell session={session} onSignOut={signOut} toasts={toasts} />
-    </BrowserRouter>
-  )
+  return <AppShell session={session} onSignOut={signOut} toasts={toasts} />
 }
 
 function AppShell({ session, onSignOut, toasts }) {
@@ -62,18 +84,18 @@ function AppShell({ session, onSignOut, toasts }) {
   }
 
   const sharedProps = {
-    entities:       data.entities,
-    operations:     data.operations,
-    incomes:        data.incomes,
-    addEntity:      data.addEntity,
-    updateEntity:   data.updateEntity,
-    deleteEntity:   data.deleteEntity,
-    addOperation:   data.addOperation,
-    deleteOperation:data.deleteOperation,
-    addIncome:      data.addIncome,
-    updateIncome:   data.updateIncome,
-    deleteIncome:   data.deleteIncome,
-    executeCashIn:  data.executeCashIn,
+    entities:        data.entities,
+    operations:      data.operations,
+    incomes:         data.incomes,
+    addEntity:       data.addEntity,
+    updateEntity:    data.updateEntity,
+    deleteEntity:    data.deleteEntity,
+    addOperation:    data.addOperation,
+    deleteOperation: data.deleteOperation,
+    addIncome:       data.addIncome,
+    updateIncome:    data.updateIncome,
+    deleteIncome:    data.deleteIncome,
+    executeCashIn:   data.executeCashIn,
   }
 
   return (

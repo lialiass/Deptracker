@@ -47,6 +47,19 @@ npm run dev
 npm run build
 ```
 
+## Emails transactionnels (reset de mot de passe)
+
+Supabase utilise un serveur SMTP partagé limité à **2 emails/heure** en développement. Pour la production, configurer un SMTP personnalisé dans **Supabase Dashboard → Project Settings → Auth → SMTP Settings** :
+
+| Service    | Plan gratuit       |
+|------------|--------------------|
+| [Resend](https://resend.com)     | 3 000 emails/mois  |
+| [Brevo](https://brevo.com)      | 300 emails/jour    |
+| [SendGrid](https://sendgrid.com) | 100 emails/jour    |
+| [Postmark](https://postmarkapp.com) | payant uniquement |
+
+Penser aussi à configurer l'**URL de redirection** dans Supabase Dashboard → Auth → URL Configuration → Redirect URLs (ajouter `https://<votre-domaine>/reset-password`).
+
 ## Déploiement Vercel
 
 | Paramètre         | Valeur        |
